@@ -11,8 +11,6 @@ import xImg from "./img/X.png";
 import oImg from "./img/O.png";
 import emptyImg from "./img/empty.png";
 
-var timer = null;
-
 function Square(props) {
     let imgSrc = emptyImg;
     if(props.value === "X") {
@@ -38,6 +36,15 @@ class Board extends React.Component {
         };
     }
 
+    componentDidMount() {
+        this.timout = null;
+    }
+
+    componentWillUnmount() {    //runs when Board is removed from DOM    
+        clearTimeout(this.timout);
+        this.timout = null;
+    }
+
     handleClick(i) {
         const squares = this.state.squares.slice();
 
@@ -47,26 +54,7 @@ class Board extends React.Component {
 
         if(this.state.xIsNext) { //bc it hasn't been swapped yet
             this.setState({clicksDisabled:true});
-            timer = setTimeout(aiTurn, 750, this);
-        }
-
-        function aiTurn(that) { 
-            const squares = that.state.squares.slice();
-            const board = squaresToBoard(squares);
-            let oMove = findBestMove(board); //{row: , col: }
-            if(oMove === undefined) {
-                console.log("oMove = " + JSON.stringify(oMove));
-            }
-            let i = oMove.col;
-            if(oMove.row === 1) {
-                i +=3;
-            } else if(oMove.row === 2) {
-                i += 6;
-            }
-            that.setState({clicksDisabled: false});
-            that.handleClick(i);
-            clearTimeout(timer);
-            timer = null;
+            this.timout = setTimeout(() => this.aiTurn(), 750, this);
         }
 
         squares[i] = this.state.xIsNext ? 'X' : 'O';
@@ -74,6 +62,23 @@ class Board extends React.Component {
             squares: squares,
             xIsNext: !this.state.xIsNext
         });
+    }    
+
+    aiTurn() { 
+        const squares = this.state.squares.slice();
+        const board = squaresToBoard(squares);
+        let oMove = findBestMove(board); //{row: , col: }
+        if(oMove === undefined) {
+            console.log("oMove = " + JSON.stringify(oMove));
+        }
+        let i = oMove.col;
+        if(oMove.row === 1) {
+            i +=3;
+        } else if(oMove.row === 2) {
+            i += 6;
+        }
+        this.setState({clicksDisabled: false});
+        this.handleClick(i);
     }
 
     renderSquare(i) {
